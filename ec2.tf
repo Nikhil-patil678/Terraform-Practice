@@ -1,50 +1,66 @@
 provider "aws" {
     region = "us-east-1"
+  
+}
+# Practical-1
+resource "aws_instance" "web" {
+    ami = "ami-068c0051b15cdb816"
+    instance_type = "t2.micro"
+    key_name = "pem-linux-key"
+    vpc_security_group_ids = [ "sg-023fb939d5a6654eb" , "sg-03c822aee811d2d00" ]
+    tags = {
+        Name = "My-server"
+    }  
+}
+# Practical-2
+resource "aws_instance" "web" {
+    ami = "ami-068c0051b15cdb816"
+    instance_type = "t2.micro"
+    key_name = "pem-linux-key"
+    # to refer resources in terraform
+    vpc_security_group_ids = [aws_security_group.my-sg.id]
+    tags = {
+        Name = "My-server"
+    }  
 }
 
-#First practical
-resource "aws_instance" "my-first-instance" {
-ami ="ami-068c0051b15cdb816"
-  instance_type = "t2.micro"
-  tags = {
-   Name = "web-server-1"
+resource "aws_security_group" "my-sg" {
+    name = "my-sg"
+    description = " it allows ssh"
+ingress {
+  description = "allow ssh"
+  to_port = 22
+  from_port = 22
+  protocol = "tcp"
+  cidr_blocks = [ "0.0.0.0/0" ]
 }
-}
+ingress {
+    description = "allow http"
+    to_port = 80
+    from_port = 80
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
 
-resource "aws_instance" "my-second-instance" {
-ami ="ami-068c0051b15cdb816"
-  instance_type = "t2.micro"
-  tags = {
-   Name = "web-server-2"
 }
+ingress {
+    description = "allow https"
+    to_port = 443
+    from_port = 443
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
 }
+egress {
+    description = "allow all traffic"
+    to_port = 0
+    from_port = 0
+    protocol = -1
+    cidr_blocks = [ "0.0.0.0/0" ]
 
-#Second Practical
-resource "aws_instance" "my-third-instance" {
-ami ="ami-068c0051b15cdb816"
-  instance_type = "t2.micro"
-  count = 3
-  tags = {
-   Name = "web-server${count.index}"
 }
+lifecycle {
+  create_before_destroy = true
 }
+}  
 
-# Third Practical
-resource "aws_instance" "my-third-instance" {
-ami ="ami-068c0051b15cdb816"
-  instance_type = "t2.micro"
-  count = 3
-  tags = {
-   Name = "web-server${count.index+1}"
-}
-}
 
-#Fourth practical
-resource "aws_instance" "my-third-instance" {
-  for_each = toset(["app-server","db-server","proxy-server"])
-ami ="ami-068c0051b15cdb816"
-  instance_type = "t2.micro"
-  tags = {
-   Name = each.key
-}
-}
+
